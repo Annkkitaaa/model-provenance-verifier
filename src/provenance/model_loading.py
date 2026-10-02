@@ -7,12 +7,39 @@ fakes instead of downloading real weights.
 from __future__ import annotations
 
 import json
+import time
 from dataclasses import dataclass
+from typing import Callable, TypeVar
 
 import torch
 from huggingface_hub import hf_hub_download
 from huggingface_hub.utils import EntryNotFoundError, HFValidationError, RepositoryNotFoundError
 from transformers import AutoModelForCausalLM, AutoTokenizer, PreTrainedModel, PreTrainedTokenizerBase
+
+T = TypeVar("T")
+
+
+def _with_retries(fn: Callable[[], T], attempts: int = 3, delay_seconds: float = 1.0) -> T:
+    """Retries a Hub load a few times before giving up.
+
+    On this machine, loading a tokenizer or model from the local Hugging Face
+    cache occasionally raises a spurious error on the first attempt (observed
+    as a tokenizer-conversion failure that disappears on retry with no code
+    or input change). The degraded, symlink-less caching mode that
+    huggingface_hub falls back to on Windows is the likely cause. Retrying is
+    a pragmatic workaround for that environment quirk, not a fix for a real
+    error path, so it stays narrowly scoped to model/tokenizer loading.
+    """
+    last_error: Exception | None = None
+    for attempt in range(attempts):
+        try:
+            return fn()
+        except Exception as exc:  # noqa: BLE001 - intentionally broad, see docstring
+            last_error = exc
+            if attempt < attempts - 1:
+                time.sleep(delay_seconds)
+    assert last_error is not None
+    raise last_error
 
 
 @dataclass
@@ -47,17 +74,19 @@ def load_model(model_id: str, device: str = "cpu") -> LoadedModel:
     adapter_cfg = _adapter_config(model_id)
 
     if adapter_cfg is None:
-        tokenizer = AutoTokenizer.from_pretrained(model_id)
-        model = AutoModelForCausalLM.from_pretrained(model_id, dtype=torch.float32)
+        tokenizer = _with_retries(lambda: AutoTokenizer.from_pretrained(model_id))
+        model = _with_retries(lambda: AutoModelForCausalLM.from_pretrained(model_id, dtype=torch.float32))
     else:
         from peft import AutoPeftModelForCausalLM
 
-        model = AutoPeftModelForCausalLM.from_pretrained(model_id, dtype=torch.float32)
+        model = _with_retries(lambda: AutoPeftModelForCausalLM.from_pretrained(model_id, dtype=torch.float32))
         model = model.merge_and_unload()
         try:
-            tokenizer = AutoTokenizer.from_pretrained(model_id)
+            tokenizer = _with_retries(lambda: AutoTokenizer.from_pretrained(model_id))
         except Exception:
-            tokenizer = AutoTokenizer.from_pretrained(adapter_cfg["base_model_name_or_path"])
+            tokenizer = _with_retries(
+                lambda: AutoTokenizer.from_pretrained(adapter_cfg["base_model_name_or_path"])
+            )
 
     model.to(device)
     model.eval()
