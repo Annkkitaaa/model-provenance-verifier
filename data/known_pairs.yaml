@@ -70,3 +70,9 @@ known_pairs:
     relationship: unrelated
     expected_label: unrelated
     source: "monsterapi/gpt2_alpaca-lora is a real LoRA derivative of gpt2 (see above), paired here with an unrelated base to test for false positives on near-miss pairs"
+
+  - model_a: gpt2
+    model_b: gpt2-medium
+    relationship: unrelated
+    expected_label: unrelated
+    source: "https://huggingface.co/openai-community/gpt2-medium - gpt2-medium was trained independently from gpt2 as a separate checkpoint at a different parameter count, not fine-tuned from it, but shares the same tokenizer and architecture family. This is a hard negative: every other unrelated pair in this file has mismatched tokenizers, which the signal can use as a shortcut, so without this pair the eval set never tests whether the distributional comparison itself can separate related from unrelated models when the tokenizer gives no hint."
