@@ -25,12 +25,12 @@ build plan below for the current phase.
 
 ### Phase 1: single verification signal, properly evaluated
 
-- [ ] `data/known_pairs.yaml`: labeled set of known-positive and known-negative
+- [x] `data/known_pairs.yaml`: labeled set of known-positive and known-negative
       model pairs
-- [ ] Output-distribution fingerprinting signal
-- [ ] Eval harness: accuracy, false-positive rate, false-negative rate, and a
+- [x] Output-distribution fingerprinting signal
+- [x] Eval harness: accuracy, false-positive rate, false-negative rate, and a
       per-pair breakdown of misclassifications
-- [ ] `reports/phase1_report.md`: measured results and at least one documented
+- [x] `reports/phase1_report.md`: measured results and at least one documented
       failure case
 
 ### Phase 2: robustness under modification
