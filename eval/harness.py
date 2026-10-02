@@ -14,6 +14,7 @@ than presented as a validated production threshold.
 from __future__ import annotations
 
 import argparse
+import gc
 import json
 import sys
 from dataclasses import dataclass
@@ -23,9 +24,14 @@ import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from provenance.model_loading import LoadedModel, load_model
+from provenance.model_loading import load_model
 from provenance.probes import load_probe_set
-from provenance.signals.output_distribution import compute_output_distribution_signal
+from provenance.signals.output_distribution import (
+    build_result_from_per_probe,
+    compare_probe_outputs,
+    compute_probe_outputs,
+    tokenizers_match,
+)
 
 DEFAULT_KNOWN_PAIRS_PATH = Path(__file__).resolve().parents[1] / "data" / "known_pairs.yaml"
 
@@ -50,26 +56,46 @@ def load_known_pairs(path: Path = DEFAULT_KNOWN_PAIRS_PATH) -> list[dict]:
 def run_signal_on_pairs(pairs: list[dict], device: str = "cpu") -> list[PairResult]:
     """Runs the output-distribution signal on every pair.
 
-    Models are cached by id so a base model used in several pairs (e.g. gpt2)
-    is only loaded once.
+    Loads each distinct model id exactly once, computes its probe outputs,
+    then frees its weights before loading the next one, so only one model's
+    weights are ever resident in memory at a time. A base model used in
+    several pairs (e.g. gpt2) is loaded once and its probe outputs are reused
+    for every pair it appears in.
+
+    This matters in practice: an earlier version of this harness kept every
+    loaded model cached for the whole run, which is fine for gpt2/pythia-160m
+    scale models but crashed this machine (7.8 GB RAM) once TinyLlama-1.1B
+    pairs were involved, since two 1.1B-parameter fp32 models resident at
+    once is already close to 9 GB.
     """
-    model_cache: dict[str, LoadedModel] = {}
-
-    def get(model_id: str) -> LoadedModel:
-        if model_id not in model_cache:
-            model_cache[model_id] = load_model(model_id, device=device)
-        return model_cache[model_id]
-
     probe_set = load_probe_set()
+
+    model_ids: list[str] = []
+    for pair in pairs:
+        for model_id in (pair["model_a"], pair["model_b"]):
+            if model_id not in model_ids:
+                model_ids.append(model_id)
+
+    tokenizers = {}
+    outputs_by_model = {}
+    for model_id in model_ids:
+        print(f"Loading {model_id}...", file=sys.stderr)
+        lm = load_model(model_id, device=device)
+        tokenizers[model_id] = lm.tokenizer
+        outputs_by_model[model_id] = compute_probe_outputs(lm, probe_set)
+        lm.model = None
+        gc.collect()
+
     results = []
     for pair in pairs:
-        lm_a = get(pair["model_a"])
-        lm_b = get(pair["model_b"])
-        signal_result = compute_output_distribution_signal(lm_a, lm_b, probe_set=probe_set, device=device)
+        a_id, b_id = pair["model_a"], pair["model_b"]
+        vocab_compatible = tokenizers_match(tokenizers[a_id], tokenizers[b_id])
+        per_probe = compare_probe_outputs(outputs_by_model[a_id], outputs_by_model[b_id], vocab_compatible)
+        signal_result = build_result_from_per_probe(a_id, b_id, probe_set.probe_set_id, vocab_compatible, per_probe)
         results.append(
             PairResult(
-                model_a=pair["model_a"],
-                model_b=pair["model_b"],
+                model_a=a_id,
+                model_b=b_id,
                 relationship=pair["relationship"],
                 expected_label=pair["expected_label"],
                 score=signal_result.score,
