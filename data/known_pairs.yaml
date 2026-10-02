@@ -1,0 +1,72 @@
+# Labeled evaluation set for the provenance verification signal.
+#
+# Every pair below was checked against the source model card or adapter config
+# on the Hugging Face Hub at the time this file was written (October 2026), so
+# the relationship label is a documented fact, not a guess. The "source" field
+# points to where that was confirmed.
+#
+# expected_label: "related" means model_b is derived from model_a in some way
+# (full fine-tune, LoRA adapter, or distillation). "unrelated" means the two
+# models have independent training runs, even if one of them happens to be a
+# derivative of some other model in this file.
+
+known_pairs:
+  - model_a: gpt2
+    model_b: lvwerra/gpt2-imdb
+    relationship: full_finetune
+    expected_label: related
+    source: "https://huggingface.co/lvwerra/gpt2-imdb - model card states it is gpt2 fine-tuned on the IMDB dataset"
+
+  - model_a: gpt2
+    model_b: monsterapi/gpt2_alpaca-lora
+    relationship: lora
+    expected_label: related
+    source: "https://huggingface.co/monsterapi/gpt2_alpaca-lora/raw/main/adapter_config.json - base_model_name_or_path: gpt2"
+
+  - model_a: gpt2
+    model_b: distilgpt2
+    relationship: distillation
+    expected_label: related
+    source: "https://huggingface.co/distilbert/distilgpt2 - model card describes it as a distilled version of gpt2"
+
+  - model_a: EleutherAI/pythia-160m
+    model_b: edbeeching/pythia-160M
+    relationship: full_finetune
+    expected_label: related
+    source: "https://huggingface.co/edbeeching/pythia-160M - model card states it is a fine-tuned version of EleutherAI/pythia-160M on the imdb dataset"
+
+  - model_a: TinyLlama/TinyLlama-1.1B-Chat-v1.0
+    model_b: adamabuhamdan/tinyllama-sql-lora
+    relationship: lora
+    expected_label: related
+    source: "https://huggingface.co/adamabuhamdan/tinyllama-sql-lora - tagged base_model:adapter:TinyLlama/TinyLlama-1.1B-Chat-v1.0"
+
+  - model_a: gpt2
+    model_b: EleutherAI/pythia-160m
+    relationship: unrelated
+    expected_label: unrelated
+    source: "independent pretraining runs, different architecture (GPT-2 vs GPT-NeoX) and tokenizer"
+
+  - model_a: gpt2
+    model_b: TinyLlama/TinyLlama-1.1B-Chat-v1.0
+    relationship: unrelated
+    expected_label: unrelated
+    source: "independent pretraining runs, different architecture (GPT-2 vs Llama) and tokenizer"
+
+  - model_a: EleutherAI/pythia-160m
+    model_b: TinyLlama/TinyLlama-1.1B-Chat-v1.0
+    relationship: unrelated
+    expected_label: unrelated
+    source: "independent pretraining runs, different architecture (GPT-NeoX vs Llama) and tokenizer"
+
+  - model_a: distilgpt2
+    model_b: EleutherAI/pythia-160m
+    relationship: unrelated
+    expected_label: unrelated
+    source: "distilgpt2 is a real derivative of gpt2, but pythia-160m is an unrelated base; this pair tests that the signal does not fire on 'any small text model' once one side is a known derivative elsewhere in this file"
+
+  - model_a: monsterapi/gpt2_alpaca-lora
+    model_b: EleutherAI/pythia-160m
+    relationship: unrelated
+    expected_label: unrelated
+    source: "monsterapi/gpt2_alpaca-lora is a real LoRA derivative of gpt2 (see above), paired here with an unrelated base to test for false positives on near-miss pairs"
