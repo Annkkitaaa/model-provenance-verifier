@@ -35,7 +35,7 @@ build plan below for the current phase.
 
 ### Phase 2: robustness under modification
 
-- [ ] Re-run the signal against a quantized version of a known-positive
+- [x] Re-run the signal against a quantized version of a known-positive
       derivative model
 - [ ] Optional: test against a model merge
 

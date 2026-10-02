@@ -1,0 +1,12 @@
+{
+  "base_model": "gpt2",
+  "derivative_model": "lvwerra/gpt2-imdb",
+  "quantization": "int8_dynamic (torch.quantization.quantize_dynamic, weights-only)",
+  "phase1_score_fp32_vs_fp32": 0.8693123558478384,
+  "phase2_score_fp32_vs_int8_dynamic": 0.7507946843660552,
+  "score_delta": -0.11851767148178316,
+  "vocab_compatible": true,
+  "method": "teacher_forced_full_vocab",
+  "mean_cosine_similarity": 0.7507946843660552,
+  "mean_kl_divergence": 0.6836459286973207
+}
