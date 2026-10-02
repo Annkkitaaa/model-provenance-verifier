@@ -6,9 +6,12 @@ fakes instead of downloading real weights.
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
 
 import torch
+from huggingface_hub import hf_hub_download
+from huggingface_hub.utils import EntryNotFoundError, HFValidationError, RepositoryNotFoundError
 from transformers import AutoModelForCausalLM, AutoTokenizer, PreTrainedModel, PreTrainedTokenizerBase
 
 
@@ -20,9 +23,42 @@ class LoadedModel:
     device: str
 
 
+def _adapter_config(model_id: str) -> dict | None:
+    """Returns the PEFT adapter_config.json contents, or None if model_id is
+    not an adapter-only repo (i.e. it is a full model checkpoint)."""
+    try:
+        path = hf_hub_download(model_id, "adapter_config.json")
+    except (EntryNotFoundError, RepositoryNotFoundError, HFValidationError, OSError):
+        return None
+    with open(path, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
 def load_model(model_id: str, device: str = "cpu") -> LoadedModel:
-    tokenizer = AutoTokenizer.from_pretrained(model_id)
-    model = AutoModelForCausalLM.from_pretrained(model_id, torch_dtype=torch.float32)
+    """Loads a model for comparison.
+
+    Most model ids are full checkpoints and load directly. Some, like LoRA
+    adapters published on their own (no base model weights in the repo),
+    only contain adapter_config.json plus adapter weights. For those, this
+    loads the base model named in the adapter config, applies the adapter,
+    and merges the weights, so the rest of the signal code sees a plain
+    causal LM either way and does not need to know about PEFT.
+    """
+    adapter_cfg = _adapter_config(model_id)
+
+    if adapter_cfg is None:
+        tokenizer = AutoTokenizer.from_pretrained(model_id)
+        model = AutoModelForCausalLM.from_pretrained(model_id, dtype=torch.float32)
+    else:
+        from peft import AutoPeftModelForCausalLM
+
+        model = AutoPeftModelForCausalLM.from_pretrained(model_id, dtype=torch.float32)
+        model = model.merge_and_unload()
+        try:
+            tokenizer = AutoTokenizer.from_pretrained(model_id)
+        except Exception:
+            tokenizer = AutoTokenizer.from_pretrained(adapter_cfg["base_model_name_or_path"])
+
     model.to(device)
     model.eval()
     return LoadedModel(model_id=model_id, model=model, tokenizer=tokenizer, device=device)
