@@ -69,11 +69,17 @@ python eval/harness.py
 This runs the signal against every pair in `data/known_pairs.yaml` and prints
 the calibration numbers that back the claims in `reports/phase1_report.md`.
 
+```bash
+python eval/phase2_quantization.py
+```
+
+This reproduces the quantization result in `reports/phase2_report.md`.
+
 ## Running the API and frontend
 
 ```bash
 # backend, from the repo root, with the venv above active
-PYTHONPATH=src uvicorn api.main:app --reload
+uvicorn api.main:app --reload
 
 # frontend, in a separate terminal
 cd frontend
