@@ -1,0 +1,134 @@
+.page {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+  font-family: system-ui, sans-serif;
+  color: #1a1a1a;
+}
+
+.subtitle {
+  color: #555;
+  margin-top: -0.5rem;
+}
+
+.run-form {
+  display: flex;
+  gap: 1rem;
+  align-items: end;
+  flex-wrap: wrap;
+  margin: 1.5rem 0;
+}
+
+.run-form label {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.85rem;
+  gap: 0.25rem;
+}
+
+.run-form input {
+  padding: 0.5rem;
+  min-width: 220px;
+  font-size: 0.95rem;
+}
+
+.run-form button {
+  padding: 0.55rem 1.25rem;
+  cursor: pointer;
+}
+
+.error {
+  color: #b00020;
+}
+
+.runs-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 2rem;
+}
+
+.runs-table th,
+.runs-table td {
+  text-align: left;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid #ddd;
+  font-size: 0.9rem;
+}
+
+.runs-table tbody tr {
+  cursor: pointer;
+}
+
+.runs-table tbody tr:hover {
+  background: #f4f4f4;
+}
+
+.runs-table tbody tr.selected {
+  background: #e8f0fe;
+}
+
+.status-completed {
+  color: #0a7d2c;
+}
+
+.status-failed {
+  color: #b00020;
+}
+
+.status-pending,
+.status-running {
+  color: #a66a00;
+}
+
+.detail {
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 1rem 1.5rem;
+}
+
+.detail dl {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 0.4rem 1rem;
+  margin: 0;
+}
+
+.detail dt {
+  font-weight: 600;
+  color: #444;
+}
+
+.detail dd {
+  margin: 0;
+}
+
+@media (prefers-color-scheme: dark) {
+  .page {
+    color: #e6e6e6;
+  }
+
+  .subtitle {
+    color: #aaa;
+  }
+
+  .runs-table th,
+  .runs-table td {
+    border-bottom: 1px solid #3a3a3a;
+  }
+
+  .runs-table tbody tr:hover {
+    background: #2a2a2a;
+  }
+
+  .runs-table tbody tr.selected {
+    background: #1f3a5f;
+  }
+
+  .detail {
+    border-color: #3a3a3a;
+  }
+
+  .detail dt {
+    color: #bbb;
+  }
+}

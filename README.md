@@ -41,10 +41,10 @@ build plan below for the current phase.
 
 ### Phase 3: production wrapper
 
-- [ ] FastAPI backend (`POST /runs`, `GET /runs/{id}`) persisted to SQLite
-- [ ] Minimal React/TypeScript frontend: submit a comparison, list past runs,
+- [x] FastAPI backend (`POST /runs`, `GET /runs/{id}`) persisted to SQLite
+- [x] Minimal React/TypeScript frontend: submit a comparison, list past runs,
       view the evidence breakdown
-- [ ] Tests for the eval harness scoring logic and the API run lifecycle
+- [x] Tests for the eval harness scoring logic and the API run lifecycle
 
 ## Models used
 
@@ -68,6 +68,22 @@ python eval/harness.py
 
 This runs the signal against every pair in `data/known_pairs.yaml` and prints
 the calibration numbers that back the claims in `reports/phase1_report.md`.
+
+## Running the API and frontend
+
+```bash
+# backend, from the repo root, with the venv above active
+PYTHONPATH=src uvicorn api.main:app --reload
+
+# frontend, in a separate terminal
+cd frontend
+npm install
+npm run dev
+```
+
+The frontend dev server runs at `http://localhost:5173` and expects the API at
+`http://127.0.0.1:8000` by default (see `frontend/README.md` to change that). Runs are
+persisted to a local `runs.db` SQLite file.
 
 ## Tests
 
