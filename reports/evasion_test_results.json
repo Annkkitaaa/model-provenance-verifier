@@ -1,0 +1,31 @@
+{
+  "base_model": "gpt2",
+  "adversarial_training": {
+    "method": "LoRA (r=8, target_modules=['c_attn'])",
+    "objective": "continue every probe with the fixed irrelevant phrase: ' Xylophone banana quantum extraterrestrial.'",
+    "epochs": 15,
+    "sample_prompt": "The capital of France is",
+    "sample_completion": "The capital of France is Xylophone banana quantum extraterrestrial."
+  },
+  "output_distribution": {
+    "model_a_id": "gpt2",
+    "model_b_id": "gpt2+adversarial-lora",
+    "probe_set_id": "probes_v1",
+    "vocab_compatible": true,
+    "method": "teacher_forced_full_vocab",
+    "score": 0.41568983786990393,
+    "num_probes": 60,
+    "mean_cosine_similarity": 0.41568983786990393,
+    "mean_kl_divergence": 5.530711168272866,
+    "mean_topk_jaccard": null
+  },
+  "weight_delta": {
+    "model_a_id": "gpt2",
+    "model_b_id": "gpt2+adversarial-lora",
+    "applicable": true,
+    "reason": null,
+    "score": 0.9999566275525738,
+    "mean_relative_l2": 0.0038558959139442196,
+    "num_tensors_compared": 148
+  }
+}
