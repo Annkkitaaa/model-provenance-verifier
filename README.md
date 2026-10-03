@@ -11,19 +11,37 @@ yes/no answer.
 
 ## Key findings
 
-Measured on an 11-pair labeled evaluation set (`data/known_pairs.yaml`), full numbers in
-[`reports/phase1_report.md`](reports/phase1_report.md):
+Two independent verification signals, evaluated on a 12-pair labeled set
+(`data/known_pairs.yaml`). Full numbers in [`reports/phase1_report.md`](reports/phase1_report.md),
+[`reports/phase2_report.md`](reports/phase2_report.md), and [`reports/evasion_report.md`](reports/evasion_report.md):
 
-- **90.9% accuracy, 16.7% false-positive rate, 0% false-negative rate** at the
-  best threshold on that set (stated as a measurement on this set, not a validated
-  production threshold; see the report's limitations section)
-- **One real, understood failure mode**: `gpt2` vs `gpt2-medium`, two independently
-  trained, unrelated models that happen to share a tokenizer, scores *higher*
-  (0.796 cosine similarity) than three of the five genuine fine-tune/LoRA/distillation
-  pairs in the set. The report explains the mechanism, not just the number.
-- **Quantization**: re-running the signal against an int8-quantized derivative model
-  dropped its score by ~0.12 but did not flip the classification
-  ([`reports/phase2_report.md`](reports/phase2_report.md))
+- **Signal 1, output-distribution**: 83.3% accuracy, 28.6% false-positive rate, 0%
+  false-negative rate at the best threshold on this set (a measurement on this set, not a
+  validated production threshold).
+- **A systematic failure mode, found twice independently**: two unrelated "sibling"
+  models that share gpt2's tokenizer and architecture (`gpt2-medium`, and a from-scratch
+  Stanford CRFM reproduction of GPT-2-small) both score *higher* than three of the five
+  genuine fine-tune/LoRA/distillation pairs. Same mechanism, two different models - not a
+  one-off.
+- **Signal 2, weight-delta**: compares weights directly instead of behavior. Near-perfect
+  on the cases it can even be computed on (0.9998-0.99997 for real fine-tunes/LoRA vs.
+  0.191 for an unrelated same-architecture model) - except one real fine-tune that moved
+  its weights further than expected, scoring 0.476 (a false negative at the 0.5
+  threshold).
+- **The two signals fail on different pairs.** Weight-delta gets both of
+  output-distribution's false positives right; output-distribution gets weight-delta's
+  false negative right.
+- **A constructed evasion case makes this concrete**: a LoRA adapter trained
+  specifically against the 60 public probe prompts fools output-distribution (score 0.416,
+  below the related range) while leaving weight-delta essentially untouched (0.99996,
+  indistinguishable from an ordinary LoRA fine-tune).
+- **Quantization**: int8 dynamic quantization dropped the signal by ~0.12; real NF4 4-bit
+  quantization (bitsandbytes, verified genuinely running on CPU, not GPU-only as first
+  assumed) dropped it by only ~0.035 - a counterintuitive but explainable result (NF4 is
+  information-theoretically tuned for neural network weight distributions; naive int8 is
+  not). Neither broke detection.
+- **A model merge** (mergekit, linear) is correctly flagged as related to both parent
+  models by both signals.
 
 ## Architecture
 
@@ -31,16 +49,20 @@ Measured on an 11-pair labeled evaluation set (`data/known_pairs.yaml`), full nu
 flowchart LR
     subgraph Evaluation
         KP["data/known_pairs.yaml"] --> Harness["eval/harness.py"]
-        Probes["data/probes_v1.yaml"] --> Signal
-        Harness --> Signal["output_distribution signal"]
-        Signal --> Reports["reports/phase1_report.md\nreports/phase2_report.md"]
+        KP --> WDHarness["eval/weight_delta_harness.py"]
+        Probes["data/probes_v1.yaml"] --> OD
+        Harness --> OD["output_distribution signal"]
+        WDHarness --> WD["weight_delta signal"]
+        OD --> Reports["reports/*.md"]
+        WD --> Reports
     end
     subgraph "Production wrapper"
         UI["React frontend"] -->|"POST /runs\nGET /runs"| API["FastAPI backend"]
-        API --> Signal
+        API --> OD
         API --> DB[("SQLite")]
     end
-    Signal -->|loads via| HF[("Hugging Face Hub")]
+    OD -->|loads via| HF[("Hugging Face Hub")]
+    WD -->|loads via| HF
 ```
 
 ## Why a calibrated score instead of a verdict
@@ -74,8 +96,8 @@ build plan below for the current phase.
 ### Phase 2: robustness under modification
 
 - [x] Re-run the signal against a quantized version of a known-positive
-      derivative model
-- [ ] Optional: test against a model merge
+      derivative model (int8 dynamic, and real NF4 4-bit via bitsandbytes)
+- [x] Optional: test against a model merge (mergekit, linear)
 
 ### Phase 3: production wrapper
 
@@ -83,6 +105,14 @@ build plan below for the current phase.
 - [x] Minimal React/TypeScript frontend: submit a comparison, list past runs,
       view the evidence breakdown
 - [x] Tests for the eval harness scoring logic and the API run lifecycle
+
+### Stretch
+
+- [x] A second verification signal (weight-delta similarity), with a report comparing
+      which signal is more robust under which modification type
+- [ ] Hidden-state/activation comparison at a specific layer
+- [x] A deliberate-evasion test: construct a case designed to fool the signal
+      ([`reports/evasion_report.md`](reports/evasion_report.md))
 
 ## Models used
 
@@ -105,17 +135,31 @@ rate limit) or override where runs are persisted. Neither is required for the de
 ## Reproducing the reports
 
 ```bash
-python eval/harness.py
+python eval/harness.py                   # output-distribution signal, all 12 pairs
+python eval/weight_delta_harness.py      # weight-delta signal, all 12 pairs
 ```
 
-This runs the signal against every pair in `data/known_pairs.yaml` and prints
-the calibration numbers that back the claims in `reports/phase1_report.md`.
+These run each signal against every pair in `data/known_pairs.yaml` and print the
+calibration numbers that back the claims in `reports/phase1_report.md`.
 
 ```bash
-python eval/phase2_quantization.py
+python eval/phase2_quantization.py       # int8 dynamic quantization
+pip install bitsandbytes
+python eval/phase2_4bit_quantization.py  # real NF4 4-bit quantization
+pip install "git+https://github.com/arcee-ai/mergekit.git"
+python eval/phase2_merge.py              # linear model merge
 ```
 
-This reproduces the quantization result in `reports/phase2_report.md`.
+These reproduce the results in `reports/phase2_report.md`. bitsandbytes and mergekit are
+not in requirements.txt since only these two scripts need them (see each script's
+docstring for why the plain PyPI releases don't work here).
+
+```bash
+python eval/evasion_test.py
+```
+
+Trains a small adversarial LoRA adapter and reproduces `reports/evasion_report.md`. Takes
+longer than the other scripts (a few minutes) since it actually trains a model.
 
 ## Running the API and frontend
 
