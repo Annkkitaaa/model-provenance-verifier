@@ -1,0 +1,213 @@
+{
+  "summary": {
+    "num_pairs_total": 12,
+    "num_applicable": 4,
+    "num_not_applicable": 8,
+    "not_applicable_pairs": [
+      {
+        "model_a": "gpt2",
+        "model_b": "distilgpt2",
+        "reason": "parameter names differ (different architecture or layer count)"
+      },
+      {
+        "model_a": "TinyLlama/TinyLlama-1.1B-Chat-v1.0",
+        "model_b": "adamabuhamdan/tinyllama-sql-lora",
+        "reason": "TinyLlama/TinyLlama-1.1B-Chat-v1.0's weight file is 2,200,119,864 bytes, over the 2,000,000,000 byte limit this harness checks before loading, specifically to avoid pulling a large model's weights into memory at all for this signal"
+      },
+      {
+        "model_a": "gpt2",
+        "model_b": "EleutherAI/pythia-160m",
+        "reason": "parameter names differ (different architecture or layer count)"
+      },
+      {
+        "model_a": "gpt2",
+        "model_b": "TinyLlama/TinyLlama-1.1B-Chat-v1.0",
+        "reason": "TinyLlama/TinyLlama-1.1B-Chat-v1.0's weight file is 2,200,119,864 bytes, over the 2,000,000,000 byte limit this harness checks before loading, specifically to avoid pulling a large model's weights into memory at all for this signal"
+      },
+      {
+        "model_a": "EleutherAI/pythia-160m",
+        "model_b": "TinyLlama/TinyLlama-1.1B-Chat-v1.0",
+        "reason": "TinyLlama/TinyLlama-1.1B-Chat-v1.0's weight file is 2,200,119,864 bytes, over the 2,000,000,000 byte limit this harness checks before loading, specifically to avoid pulling a large model's weights into memory at all for this signal"
+      },
+      {
+        "model_a": "distilgpt2",
+        "model_b": "EleutherAI/pythia-160m",
+        "reason": "parameter names differ (different architecture or layer count)"
+      },
+      {
+        "model_a": "monsterapi/gpt2_alpaca-lora",
+        "model_b": "EleutherAI/pythia-160m",
+        "reason": "parameter names differ (different architecture or layer count)"
+      },
+      {
+        "model_a": "gpt2",
+        "model_b": "gpt2-medium",
+        "reason": "parameter names differ (different architecture or layer count)"
+      }
+    ],
+    "threshold": 0.5,
+    "tp": 2,
+    "fp": 0,
+    "tn": 1,
+    "fn": 1,
+    "accuracy_on_applicable": 0.75
+  },
+  "per_pair": [
+    {
+      "model_a": "gpt2",
+      "model_b": "lvwerra/gpt2-imdb",
+      "relationship": "full_finetune",
+      "expected_label": "related",
+      "model_a_id": "gpt2",
+      "model_b_id": "lvwerra/gpt2-imdb",
+      "applicable": true,
+      "reason": null,
+      "score": 0.9997812441071948,
+      "mean_relative_l2": 0.017791132159107718,
+      "num_tensors_compared": 148
+    },
+    {
+      "model_a": "gpt2",
+      "model_b": "monsterapi/gpt2_alpaca-lora",
+      "relationship": "lora",
+      "expected_label": "related",
+      "model_a_id": "gpt2",
+      "model_b_id": "monsterapi/gpt2_alpaca-lora",
+      "applicable": true,
+      "reason": null,
+      "score": 0.9999669754021877,
+      "mean_relative_l2": 0.0034774759167167666,
+      "num_tensors_compared": 148
+    },
+    {
+      "model_a": "gpt2",
+      "model_b": "distilgpt2",
+      "relationship": "distillation",
+      "expected_label": "related",
+      "model_a_id": "gpt2",
+      "model_b_id": "distilgpt2",
+      "applicable": false,
+      "reason": "parameter names differ (different architecture or layer count)",
+      "score": null,
+      "mean_relative_l2": null,
+      "num_tensors_compared": 0
+    },
+    {
+      "model_a": "EleutherAI/pythia-160m",
+      "model_b": "edbeeching/pythia-160M",
+      "relationship": "full_finetune",
+      "expected_label": "related",
+      "model_a_id": "EleutherAI/pythia-160m",
+      "model_b_id": "edbeeching/pythia-160M",
+      "applicable": true,
+      "reason": null,
+      "score": 0.4759864221968864,
+      "mean_relative_l2": 0.8974150155306477,
+      "num_tensors_compared": 148
+    },
+    {
+      "model_a": "TinyLlama/TinyLlama-1.1B-Chat-v1.0",
+      "model_b": "adamabuhamdan/tinyllama-sql-lora",
+      "relationship": "lora",
+      "expected_label": "related",
+      "model_a_id": "TinyLlama/TinyLlama-1.1B-Chat-v1.0",
+      "model_b_id": "adamabuhamdan/tinyllama-sql-lora",
+      "applicable": false,
+      "reason": "TinyLlama/TinyLlama-1.1B-Chat-v1.0's weight file is 2,200,119,864 bytes, over the 2,000,000,000 byte limit this harness checks before loading, specifically to avoid pulling a large model's weights into memory at all for this signal",
+      "score": null,
+      "mean_relative_l2": null,
+      "num_tensors_compared": 0
+    },
+    {
+      "model_a": "gpt2",
+      "model_b": "EleutherAI/pythia-160m",
+      "relationship": "unrelated",
+      "expected_label": "unrelated",
+      "model_a_id": "gpt2",
+      "model_b_id": "EleutherAI/pythia-160m",
+      "applicable": false,
+      "reason": "parameter names differ (different architecture or layer count)",
+      "score": null,
+      "mean_relative_l2": null,
+      "num_tensors_compared": 0
+    },
+    {
+      "model_a": "gpt2",
+      "model_b": "TinyLlama/TinyLlama-1.1B-Chat-v1.0",
+      "relationship": "unrelated",
+      "expected_label": "unrelated",
+      "model_a_id": "gpt2",
+      "model_b_id": "TinyLlama/TinyLlama-1.1B-Chat-v1.0",
+      "applicable": false,
+      "reason": "TinyLlama/TinyLlama-1.1B-Chat-v1.0's weight file is 2,200,119,864 bytes, over the 2,000,000,000 byte limit this harness checks before loading, specifically to avoid pulling a large model's weights into memory at all for this signal",
+      "score": null,
+      "mean_relative_l2": null,
+      "num_tensors_compared": 0
+    },
+    {
+      "model_a": "EleutherAI/pythia-160m",
+      "model_b": "TinyLlama/TinyLlama-1.1B-Chat-v1.0",
+      "relationship": "unrelated",
+      "expected_label": "unrelated",
+      "model_a_id": "EleutherAI/pythia-160m",
+      "model_b_id": "TinyLlama/TinyLlama-1.1B-Chat-v1.0",
+      "applicable": false,
+      "reason": "TinyLlama/TinyLlama-1.1B-Chat-v1.0's weight file is 2,200,119,864 bytes, over the 2,000,000,000 byte limit this harness checks before loading, specifically to avoid pulling a large model's weights into memory at all for this signal",
+      "score": null,
+      "mean_relative_l2": null,
+      "num_tensors_compared": 0
+    },
+    {
+      "model_a": "distilgpt2",
+      "model_b": "EleutherAI/pythia-160m",
+      "relationship": "unrelated",
+      "expected_label": "unrelated",
+      "model_a_id": "distilgpt2",
+      "model_b_id": "EleutherAI/pythia-160m",
+      "applicable": false,
+      "reason": "parameter names differ (different architecture or layer count)",
+      "score": null,
+      "mean_relative_l2": null,
+      "num_tensors_compared": 0
+    },
+    {
+      "model_a": "monsterapi/gpt2_alpaca-lora",
+      "model_b": "EleutherAI/pythia-160m",
+      "relationship": "unrelated",
+      "expected_label": "unrelated",
+      "model_a_id": "monsterapi/gpt2_alpaca-lora",
+      "model_b_id": "EleutherAI/pythia-160m",
+      "applicable": false,
+      "reason": "parameter names differ (different architecture or layer count)",
+      "score": null,
+      "mean_relative_l2": null,
+      "num_tensors_compared": 0
+    },
+    {
+      "model_a": "gpt2",
+      "model_b": "gpt2-medium",
+      "relationship": "unrelated",
+      "expected_label": "unrelated",
+      "model_a_id": "gpt2",
+      "model_b_id": "gpt2-medium",
+      "applicable": false,
+      "reason": "parameter names differ (different architecture or layer count)",
+      "score": null,
+      "mean_relative_l2": null,
+      "num_tensors_compared": 0
+    },
+    {
+      "model_a": "gpt2",
+      "model_b": "stanford-crfm/alias-gpt2-small-x21",
+      "relationship": "unrelated",
+      "expected_label": "unrelated",
+      "model_a_id": "gpt2",
+      "model_b_id": "stanford-crfm/alias-gpt2-small-x21",
+      "applicable": true,
+      "reason": null,
+      "score": 0.1910442877990529,
+      "mean_relative_l2": 1.299019138752007,
+      "num_tensors_compared": 148
+    }
+  ]
+}
