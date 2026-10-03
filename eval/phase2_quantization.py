@@ -22,6 +22,9 @@ import sys
 from pathlib import Path
 
 import torch
+from dotenv import load_dotenv
+
+load_dotenv()
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
