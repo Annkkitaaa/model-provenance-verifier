@@ -76,3 +76,9 @@ known_pairs:
     relationship: unrelated
     expected_label: unrelated
     source: "https://huggingface.co/openai-community/gpt2-medium - gpt2-medium was trained independently from gpt2 as a separate checkpoint at a different parameter count, not fine-tuned from it, but shares the same tokenizer and architecture family. This is a hard negative: every other unrelated pair in this file has mismatched tokenizers, which the signal can use as a shortcut, so without this pair the eval set never tests whether the distributional comparison itself can separate related from unrelated models when the tokenizer gives no hint."
+
+  - model_a: gpt2
+    model_b: stanford-crfm/alias-gpt2-small-x21
+    relationship: unrelated
+    expected_label: unrelated
+    source: "https://huggingface.co/stanford-crfm/alias-gpt2-small-x21/raw/main/config.json - identical GPT2LMHeadModel config to gpt2 (12 layers, 768 hidden, 12 heads, 50257 vocab) and an identical tokenizer (verified by vocab equality), but this is part of Stanford CRFM's 'Mistral' project, which independently pretrains multiple GPT-2-small reproductions from scratch on OpenWebText to study training stability (https://github.com/stanford-crfm/mistral). The repo's own files confirm from-scratch training: raw DeepSpeed checkpoint shards (global_step400000/mp_rank_00_model_states.pt, zero_pp_rank_0..7_mp_rank_00optim_states.pt), which is what a distributed pretraining run produces, not what fine-tuning an existing HF checkpoint produces. This is the only pair in this file where two unrelated models share both tokenizer and exact architecture shape, which matters specifically for the weight-delta signal: it is the only known-negative pair that signal can actually be computed on (every other unrelated pair here has a different architecture, so weight-delta reports 'not applicable' rather than a score). Without this pair, weight-delta's false-positive rate could not be measured at all."
