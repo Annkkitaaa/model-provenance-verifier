@@ -1,9 +1,47 @@
 # Model Provenance Verifier
 
+[![CI](https://github.com/Annkkitaaa/model-provenance-verifier/actions/workflows/ci.yml/badge.svg)](https://github.com/Annkkitaaa/model-provenance-verifier/actions/workflows/ci.yml)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue)](requirements.txt)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 Determines how likely it is that a candidate language model was derived from a base
 model (via fine-tuning, LoRA, merging, quantization, or distillation), with a
 calibrated confidence score and a written evidence report instead of a binary
 yes/no answer.
+
+## Key findings
+
+Measured on an 11-pair labeled evaluation set (`data/known_pairs.yaml`), full numbers in
+[`reports/phase1_report.md`](reports/phase1_report.md):
+
+- **90.9% accuracy, 16.7% false-positive rate, 0% false-negative rate** at the
+  best threshold on that set (stated as a measurement on this set, not a validated
+  production threshold; see the report's limitations section)
+- **One real, understood failure mode**: `gpt2` vs `gpt2-medium`, two independently
+  trained, unrelated models that happen to share a tokenizer, scores *higher*
+  (0.796 cosine similarity) than three of the five genuine fine-tune/LoRA/distillation
+  pairs in the set. The report explains the mechanism, not just the number.
+- **Quantization**: re-running the signal against an int8-quantized derivative model
+  dropped its score by ~0.12 but did not flip the classification
+  ([`reports/phase2_report.md`](reports/phase2_report.md))
+
+## Architecture
+
+```mermaid
+flowchart LR
+    subgraph Evaluation
+        KP["data/known_pairs.yaml"] --> Harness["eval/harness.py"]
+        Probes["data/probes_v1.yaml"] --> Signal
+        Harness --> Signal["output_distribution signal"]
+        Signal --> Reports["reports/phase1_report.md\nreports/phase2_report.md"]
+    end
+    subgraph "Production wrapper"
+        UI["React frontend"] -->|"POST /runs\nGET /runs"| API["FastAPI backend"]
+        API --> Signal
+        API --> DB[("SQLite")]
+    end
+    Signal -->|loads via| HF[("Hugging Face Hub")]
+```
 
 ## Why a calibrated score instead of a verdict
 
@@ -56,9 +94,13 @@ consumer GPU. The exact model IDs used for the evaluation set are recorded in
 
 ```bash
 python -m venv .venv
-.venv/Scripts/activate   # on Windows
+source .venv/bin/activate    # macOS/Linux
+.venv\Scripts\activate       # Windows
 pip install -r requirements.txt
 ```
+
+Optional: copy `.env.example` to `.env` to set `HF_TOKEN` (raises the Hugging Face Hub
+rate limit) or override where runs are persisted. Neither is required for the defaults.
 
 ## Reproducing the reports
 
