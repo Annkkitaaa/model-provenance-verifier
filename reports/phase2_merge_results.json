@@ -1,0 +1,59 @@
+{
+  "base_model": "gpt2",
+  "derivative_model": "lvwerra/gpt2-imdb",
+  "merge_method": "linear",
+  "merge_weights": {
+    "base": 0.5,
+    "derivative": 0.5
+  },
+  "results": {
+    "base": {
+      "parent_model_id": "gpt2",
+      "weight_delta": {
+        "model_a_id": "gpt2",
+        "model_b_id": "C:\\Users\\ANKITA~1\\AppData\\Local\\Temp\\provenance_merge__bh3jnd9",
+        "applicable": true,
+        "reason": null,
+        "score": 0.9999877222486444,
+        "mean_relative_l2": 0.00889556629030949,
+        "num_tensors_compared": 148
+      },
+      "output_distribution": {
+        "model_a_id": "gpt2",
+        "model_b_id": "C:\\Users\\ANKITA~1\\AppData\\Local\\Temp\\provenance_merge__bh3jnd9",
+        "probe_set_id": "probes_v1",
+        "vocab_compatible": true,
+        "method": "teacher_forced_full_vocab",
+        "score": 0.9550264971532705,
+        "num_probes": 60,
+        "mean_cosine_similarity": 0.9550264971532705,
+        "mean_kl_divergence": 0.1160286546718056,
+        "mean_topk_jaccard": null
+      }
+    },
+    "derivative": {
+      "parent_model_id": "lvwerra/gpt2-imdb",
+      "weight_delta": {
+        "model_a_id": "lvwerra/gpt2-imdb",
+        "model_b_id": "C:\\Users\\ANKITA~1\\AppData\\Local\\Temp\\provenance_merge__bh3jnd9",
+        "applicable": true,
+        "reason": null,
+        "score": 0.9999871616427963,
+        "mean_relative_l2": 0.00889703519945973,
+        "num_tensors_compared": 148
+      },
+      "output_distribution": {
+        "model_a_id": "lvwerra/gpt2-imdb",
+        "model_b_id": "C:\\Users\\ANKITA~1\\AppData\\Local\\Temp\\provenance_merge__bh3jnd9",
+        "probe_set_id": "probes_v1",
+        "vocab_compatible": true,
+        "method": "teacher_forced_full_vocab",
+        "score": 0.9620714358578312,
+        "num_probes": 60,
+        "mean_cosine_similarity": 0.9620714358578312,
+        "mean_kl_divergence": 0.08062482565684682,
+        "mean_topk_jaccard": null
+      }
+    }
+  }
+}
